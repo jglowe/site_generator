@@ -1,0 +1,6 @@
+(executable
+ (name site_gen)
+ (libraries bos omd yaml yaml.unix cohttp-lwt-unix lwt_ppx jingoo core)
+ (modules site_gen build serve)
+ (preprocess
+  (pps ppx_jane lwt_ppx)))

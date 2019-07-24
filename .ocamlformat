@@ -1,0 +1,4 @@
+profile = ocamlformat
+field-space = loose
+break-separators = after-and-docked
+break-cases = fit

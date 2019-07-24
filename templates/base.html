@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="{{ info.about }}" />
+    <title>Comedic Cat: {{ title }}</title>
+    <script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');ga('create', 'UA-90432288-1', 'auto');ga('send', 'pageview');</script>
+    <link href="/media/site_styles.css" rel="stylesheet" />
+    <link rel="short icon" type="image/png" href="/media/favicon.png" />
+</head>
+
+<body>
+    <header>
+
+    <nav class="main-navbar">
+        <div class="container">
+
+        <div class="row">
+            <div class="col-md-8 text-center text-md-left">
+                <h2><a href="/index.html" class=""><img id="logo" src="/media/logo.png" alt="Comedic Cat" title="Comedic Cat" /></a></h2>
+            </div>
+
+            <div class="col-md-2 align-self-center text-md-right text-center nav-item">
+                <a class="nav-item" href="/blog/index.html">Blog</a>
+            </div>
+
+            <div class="col-md-2 align-self-center text-md-right text-center nav-item">
+                <a class="nav-item" href="/index.html">Comic</a>
+            </div>
+        </div>
+
+        </div>
+    </nav>
+
+    </header>
+
+    <main>
+
+    <div class="main-content container">
+
+    {% block content %}
+    {% endblock %}
+
+    </div>
+
+    </main>
+
+    <footer class="page-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 col-sm-12">
+                    <h4>About This Comic</h4>
+                    <p class="black-text">{{ info.about }}</p>
+                </div>
+
+                <div class="col-lg-4 col-sm-12 offset-lg-2">
+                    <h4>Links</h4>
+                    <ul class="no-decoration-list">
+                        <li><a class="black-text" href="/about.html">About</a></li>
+                        <li><a class="black-text" href="/blog/index.html">Blog</a></li>
+                        <li><a class="black-text" href="/index.html">Comic</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-copyright">
+            <div class="container">
+                © 2018 Copyright Jonathan Lowe
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>

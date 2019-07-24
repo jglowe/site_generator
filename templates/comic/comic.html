@@ -1,0 +1,26 @@
+{% with title = comic.title %}
+{% extends "base.html" %}
+{% endwith %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-12">
+        <div class="comic-container">
+
+        <h1 class="comic-title text-center">{{ comic.title }}</h1>
+
+        <img class="comic" src="{{ comic.image }}" title="{{ comic.title_text }}" alt="{{ comic.alt_text }}" />
+
+        <div class="comic-nav row">
+            <div class="col-3 text-right"><a href="{{ comic.first }}">First</a></div>
+            <div class="col-2 text-left"><a href="{{ comic.previous }}">Previous</a></div>
+            <div class="col-4 text-right"><a href="{{ comic.next }}">Next</a></div>
+            <div class="col-3 text-left"><a href="{{ comic.latest }}">Latest</a></div>
+        </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

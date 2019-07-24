@@ -1,0 +1,16 @@
+{% with title = page.title %}
+{% extends "base.html" %}
+{% endwith %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-12">
+        <div class="about-container">
+            <h1 class="about-title text-center">{{ page.title }}</h1>
+            <div class="container markdown">{% autoescape false %}{{ page.content | markdown }}{% endautoescape %}</div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

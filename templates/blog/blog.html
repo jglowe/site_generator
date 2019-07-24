@@ -1,0 +1,27 @@
+{% with title = post.title %}
+{% extends "base.html" %}
+{% endwith %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-12">
+        <div class="blog-container">
+
+        <h1 class="blog-title text-center">{{ post.title }}</h1>
+        <h6 class="blog-meta text-center">{{ post.date | date }} by {{ post.author }}</h6>
+
+        <div class="container markdown">{% autoescape false %}{{ post.content | markdown }}{% endautoescape %}</div>
+
+        <div class="blog-nav row">
+            <div class="col-3 text-right"><a href="{{ post.first }}">First</a></div>
+            <div class="col-2 text-left"><a href="{{ post.previous }}">Previous</a></div>
+            <div class="col-4 text-right"><a href="{{ post.next }}">Next</a></div>
+            <div class="col-3 text-left"><a href="{{ post.latest }}">Latest</a></div>
+        </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
