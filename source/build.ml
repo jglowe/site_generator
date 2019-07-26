@@ -26,8 +26,17 @@ let yaml_to_html_endings filename =
 
 let yaml_to_html_endings_fpath filename =
   let filename = Fpath.to_string filename in
-  let regex = Str.regexp "\\(.+\\)\\.y\\(a\\)?ml$" in
-  Fpath.v (Str.global_replace regex "\\1.html" filename)
+  let filename = yaml_to_html_endings filename in
+  Fpath.v filename
+
+let remove_html_endings filename =
+  let regex = Str.regexp "\\(.+\\)\\.htm\\(l\\)?$" in
+  Str.global_replace regex "\\1" filename
+
+let remove_html_endings_fpath filename =
+  let filename = Fpath.to_string filename in
+  let filename = remove_html_endings filename in
+  Fpath.v filename
 
 let site_wide_variables =
   let content =
@@ -145,15 +154,14 @@ let build_comic ~output ~templates ~contents =
         | `O assoc_list ->
             ( "comic",
               `O
-                ( ("first", `String ("/" ^ string_of_int 0 ^ ".html"))
+                ( ("first", `String "/0")
                 :: ( "previous",
-                     if i = 0 then `String "/0.html"
-                     else `String ("/" ^ string_of_int (i - 1) ^ ".html") )
+                     if i = 0 then `String "/0"
+                     else `String ("/" ^ string_of_int (i - 1)) )
                 :: ( "next",
-                     if i = last then
-                       `String ("/" ^ string_of_int last ^ ".html")
-                     else `String ("/" ^ string_of_int (i + 1) ^ ".html") )
-                :: ("latest", `String "/index.html")
+                     if i = last then `String ("/" ^ string_of_int last)
+                     else `String ("/" ^ string_of_int (i + 1)) )
+                :: ("latest", `String "/")
                 :: assoc_list ) )
             :: List.remove_assoc "comic" page_content
         | _ -> raise Not_found
@@ -163,7 +171,7 @@ let build_comic ~output ~templates ~contents =
       in
       render_page (output_file, page_content))
     page_content ;
-  (* Copies the last post to blog/index.html *)
+  (* Copies the last post to index.html *)
   if last > 0 then (
     let file =
       Core.In_channel.read_all
@@ -236,15 +244,20 @@ let build_blog ~output ~templates ~contents =
               `O
                 ( ( "first",
                     `String
-                      (Fpath.to_string (Fpath.append (Fpath.v "/") first)) )
+                      (Fpath.to_string
+                         (Fpath.append (Fpath.v "/")
+                            (remove_html_endings_fpath first))) )
                 :: ( "previous",
                      `String
-                       (Fpath.to_string (Fpath.append (Fpath.v "/") previous))
-                   )
+                       (Fpath.to_string
+                          (Fpath.append (Fpath.v "/")
+                             (remove_html_endings_fpath previous))) )
                 :: ( "next",
                      `String
-                       (Fpath.to_string (Fpath.append (Fpath.v "/") next)) )
-                :: ("latest", `String "/blog/index.html")
+                       (Fpath.to_string
+                          (Fpath.append (Fpath.v "/")
+                             (remove_html_endings_fpath next))) )
+                :: ("latest", `String "/blog/")
                 :: assoc_list ) )
             :: List.remove_assoc "post" page_content
         | _ -> raise Not_found
@@ -308,7 +321,7 @@ let build ~output ~templates ~contents =
   build_comic ~output ~templates ~contents ;
   copy_media
     ~output:(Fpath.append output (Fpath.v "media"))
-    ~contents:(Fpath.v "media") ;
+    ~contents:(Fpath.v "templates/media") ;
   copy_media
     ~output:(Fpath.append output (Fpath.v "media/blog"))
     ~contents:(Fpath.append contents (Fpath.v "blog/media")) ;

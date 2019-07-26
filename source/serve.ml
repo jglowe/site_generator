@@ -94,18 +94,28 @@ let request_handler dir_to_serve (request : Request.t) =
   in
   (* TODO -- Check that path is a subdirectory of dir_to_serve *)
   let path = Fpath.append (Fpath.v dir_to_serve) (Fpath.v path) in
+  let not_found =
+    ( 404,
+      match
+        Bos.OS.File.read
+          (Fpath.append (Fpath.v dir_to_serve) (Fpath.v "404.html"))
+      with
+      | Ok v -> v
+      | Error _ -> "404 Page not found" )
+  in
   let code, response_body =
-    match File.exists path with
-    | Ok true -> (
-      match File.read path with Ok file -> (200, file) | _ -> raise Exit )
+    match File.read path with
+    | Ok file -> (200, file)
     | _ -> (
-        ( 404,
-          match
-            Bos.OS.File.read
-              (Fpath.append (Fpath.v dir_to_serve) (Fpath.v "404.html"))
-          with
-          | Ok v -> v
-          | Error _ -> "404 Page not found" ) )
+      match File.read (Fpath.v (Fpath.to_string path ^ ".html")) with
+      | Ok file -> (200, file)
+      | _ -> (
+        match Dir.exists path with
+        | Ok true -> (
+          match File.read (Fpath.append path (Fpath.v "index.html")) with
+          | Ok file -> (200, file)
+          | _ -> not_found )
+        | _ -> not_found ) )
   in
   let content_type_header = get_content_type path in
   print_endline (Fpath.to_string path) ;
