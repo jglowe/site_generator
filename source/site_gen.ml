@@ -13,20 +13,20 @@ let build =
       "Build the static site with the given templates, output, and contents \
        directories.")
     Core.Command.Let_syntax.(
-      let%map_open output =
+      let%map_open output_dir =
         flag "--output"
           (optional_with_default "output" string)
           ~doc:"Output directory. It defaults to output."
-      and templates =
+      and templates_dir =
         flag "--templates"
           (optional_with_default "templates" string)
           ~doc:"Templates directory. It defaults to templates."
-      and contents =
+      and contents_dir =
         flag "--contents"
           (optional_with_default "contents" string)
-          ~doc:"Contents directory. It defaults to contents."
+          ~doc:"The site contents directory. It defaults to contents."
       in
-      fun _ -> Build.build ~output ~templates ~contents)
+      fun _ -> Build.build ~output_dir ~templates_dir ~contents_dir)
 
 let serve =
   Core.Command.basic ~summary:"Serve the static site"

@@ -79,12 +79,12 @@ let filters =
                 Jg_types.Tstr (format_datetime (parse_datetime s))
             | a -> a )) ) ]
 
-let render_page template template_dir (output_file, page_content) =
+let render_page ~templates_dir ~template (output_file, page_content) =
   print_endline (Fpath.to_string output_file) ;
   let content = page_content @ site_wide_variables in
   (* Convert page content to jingoo *)
   let models = List.map yaml_tuple_to_jingoo_tuple content in
-  let template_dir = Fpath.to_string template_dir in
+  let template_dir = Fpath.to_string templates_dir in
   let env = {Jg_types.std_env with template_dirs = [template_dir]; filters} in
   let rendered_template =
     Jg_template.from_file (Fpath.to_string template) ~env ~models
@@ -113,10 +113,12 @@ let rec remove_last_element_list l =
   | [_] -> []
   | hd :: tl -> hd :: remove_last_element_list tl
 
-let build_comic ~output ~templates ~contents =
-  (* Render all the blog posts *)
-  let contents_dir = Fpath.append contents (Fpath.v "comic") in
-  let page_template = Fpath.append templates (Fpath.v "comic/comic.html") in
+let build_comic ~output_dir ~templates_dir ~contents_dir =
+  print_endline "Render the comic pages:-------------------------------------" ;
+  let contents_dir = Fpath.append contents_dir (Fpath.v "comic") in
+  let page_template =
+    Fpath.append templates_dir (Fpath.v "comic/comic.html")
+  in
   let content_pages = get_dir_files contents_dir in
   let content_pages = List.map (Fpath.append contents_dir) content_pages in
   let page_content = List.map get_page_content content_pages in
@@ -145,7 +147,7 @@ let build_comic ~output ~templates ~contents =
   in
   let page_content = List.sort compare page_content in
   let last = List.length page_content - 1 in
-  let render_page = render_page page_template templates in
+  let render_page = render_page ~templates_dir ~template:page_template in
   (* Renders all the pages *)
   List.iteri
     (fun i page_content ->
@@ -167,7 +169,7 @@ let build_comic ~output ~templates ~contents =
         | _ -> raise Not_found
       in
       let output_file =
-        Fpath.append output (Fpath.v (string_of_int i ^ ".html"))
+        Fpath.append output_dir (Fpath.v (string_of_int i ^ ".html"))
       in
       render_page (output_file, page_content))
     page_content ;
@@ -176,20 +178,20 @@ let build_comic ~output ~templates ~contents =
     let file =
       Core.In_channel.read_all
         (Fpath.to_string
-           (Fpath.append output (Fpath.v (string_of_int last ^ ".html"))))
+           (Fpath.append output_dir (Fpath.v (string_of_int last ^ ".html"))))
     in
     Core.Out_channel.write_all ~data:file
-      (Fpath.to_string (Fpath.append output (Fpath.v "index.html"))) ;
+      (Fpath.to_string (Fpath.append output_dir (Fpath.v "index.html"))) ;
     print_endline
-      (Fpath.to_string (Fpath.append output (Fpath.v "index.html"))) )
+      (Fpath.to_string (Fpath.append output_dir (Fpath.v "index.html"))) )
   else ()
 
-let build_blog ~output ~templates ~contents =
-  (* Render all the blog posts *)
-  let blog_output_dir = Fpath.append output (Fpath.v "blog") in
-  let contents_dir = Fpath.append contents (Fpath.v "blog") in
+let build_blog ~output_dir ~templates_dir ~contents_dir =
+  print_endline "Render the blog posts:--------------------------------------" ;
+  let blog_output_dir = Fpath.append output_dir (Fpath.v "blog") in
+  let contents_dir = Fpath.append contents_dir (Fpath.v "blog") in
   let _ = Bos.OS.Dir.create blog_output_dir in
-  let page_template = Fpath.append templates (Fpath.v "blog/blog.html") in
+  let page_template = Fpath.append templates_dir (Fpath.v "blog/blog.html") in
   let content_pages = get_dir_files contents_dir in
   let output_files = List.map yaml_to_html_endings_fpath content_pages in
   let output_files = List.map (Fpath.append (Fpath.v "blog")) output_files in
@@ -232,7 +234,7 @@ let build_blog ~output ~templates ~contents =
     | _ :: tl -> tl @ last_list_element_list tl
   in
   let combined2 = List.combine previous next in
-  let render_page = render_page page_template templates in
+  let render_page = render_page ~templates_dir ~template:page_template in
   (* Renders all the pages *)
   List.iter2
     (fun (previous, next) (output_file, page_content) ->
@@ -262,7 +264,7 @@ let build_blog ~output ~templates ~contents =
             :: List.remove_assoc "post" page_content
         | _ -> raise Not_found
       in
-      let output_file = Fpath.append output output_file in
+      let output_file = Fpath.append output_dir output_file in
       render_page (output_file, page_content))
     combined2 combined ;
   (* Copies the last post to blog/index.html *)
@@ -270,61 +272,64 @@ let build_blog ~output ~templates ~contents =
   | [(output_file, _)] ->
       let file =
         Core.In_channel.read_all
-          (Fpath.to_string (Fpath.append output output_file))
+          (Fpath.to_string (Fpath.append output_dir output_file))
       in
       Core.Out_channel.write_all ~data:file
-        (Fpath.to_string (Fpath.append output (Fpath.v "blog/index.html"))) ;
+        (Fpath.to_string (Fpath.append output_dir (Fpath.v "blog/index.html"))) ;
       print_endline
-        (Fpath.to_string (Fpath.append output (Fpath.v "blog/index.html")))
+        (Fpath.to_string (Fpath.append output_dir (Fpath.v "blog/index.html")))
   | _ -> ()
 
-let build_pages ~output ~templates ~contents =
-  let page_template = Fpath.append templates (Fpath.v "page.html") in
-  let content_pages = get_dir_files contents in
+let build_pages ~output_dir ~templates_dir ~contents_dir =
+  print_endline "Render the pages:-------------------------------------------" ;
+  let page_template = Fpath.append templates_dir (Fpath.v "page.html") in
+  let content_pages = get_dir_files contents_dir in
   let output_files = List.map yaml_to_html_endings_fpath content_pages in
-  let content_pages = List.map (Fpath.append contents) content_pages in
-  let output_files = List.map (Fpath.append output) output_files in
+  let content_pages = List.map (Fpath.append contents_dir) content_pages in
+  let output_files = List.map (Fpath.append output_dir) output_files in
   let page_content = List.map get_page_content content_pages in
   let page_content =
     List.map (fun a -> a @ site_wide_variables) page_content
   in
   let combined = List.combine output_files page_content in
-  List.iter (render_page page_template templates) combined ;
+  List.iter (render_page ~templates_dir ~template:page_template) combined ;
   (* Render 404 page *)
-  let page_template = Fpath.append templates (Fpath.v "404.html") in
-  render_page page_template templates
-    (Fpath.append output (Fpath.v "404.html"), site_wide_variables)
+  let page_template = Fpath.append templates_dir (Fpath.v "404.html") in
+  render_page ~templates_dir ~template:page_template
+    (Fpath.append output_dir (Fpath.v "404.html"), site_wide_variables)
 
-let copy_media ~output ~contents =
-  let contents = Fpath.to_string contents in
-  let output = Fpath.to_string output in
-  match Sys.command ("cp -r " ^ contents ^ " " ^ output) with
-  | 0 -> print_endline ("Copied over media from " ^ contents ^ " to " ^ output)
+let copy_media ~output_dir ~contents_dir =
+  let contents_dir = Fpath.to_string contents_dir in
+  let output_dir = Fpath.to_string output_dir in
+  match Sys.command ("cp -r " ^ contents_dir ^ " " ^ output_dir) with
+  | 0 ->
+      print_endline
+        ("Copied over media from " ^ contents_dir ^ " to " ^ output_dir)
   | _ ->
       print_endline
-        ("Unable to copy over media from " ^ contents ^ " to " ^ output)
+        ("Unable to copy over media from " ^ contents_dir ^ " to " ^ output_dir)
 
-let build ~output ~templates ~contents =
-  let output = Fpath.v output in
-  let templates = Fpath.v templates in
-  let contents = Fpath.v contents in
+let build ~output_dir ~templates_dir ~contents_dir =
+  let output_dir = Fpath.v output_dir in
+  let templates_dir = Fpath.v templates_dir in
+  let contents_dir = Fpath.v contents_dir in
   let _ =
-    match Bos.OS.Path.must_exist contents with
+    match Bos.OS.Path.must_exist contents_dir with
     | Ok _ -> ()
     | Error _ ->
         print_endline "ERROR the contents path does not exist." ;
         raise Exit
   in
-  let _ = Bos.OS.Dir.create output in
-  build_pages ~output ~templates ~contents ;
-  build_blog ~output ~templates ~contents ;
-  build_comic ~output ~templates ~contents ;
+  let _ = Bos.OS.Dir.create output_dir in
+  build_pages ~output_dir ~templates_dir ~contents_dir ;
+  build_blog ~output_dir ~templates_dir ~contents_dir ;
+  build_comic ~output_dir ~templates_dir ~contents_dir ;
   copy_media
-    ~output:(Fpath.append output (Fpath.v "media"))
-    ~contents:(Fpath.v "templates/media") ;
+    ~output_dir:(Fpath.append output_dir (Fpath.v "media"))
+    ~contents_dir:(Fpath.v "templates/media") ;
   copy_media
-    ~output:(Fpath.append output (Fpath.v "media/blog"))
-    ~contents:(Fpath.append contents (Fpath.v "blog/media")) ;
+    ~output_dir:(Fpath.append output_dir (Fpath.v "media/blog"))
+    ~contents_dir:(Fpath.append contents_dir (Fpath.v "blog/media")) ;
   copy_media
-    ~output:(Fpath.append output (Fpath.v "media/comic"))
-    ~contents:(Fpath.append contents (Fpath.v "comic/media"))
+    ~output_dir:(Fpath.append output_dir (Fpath.v "media/comic"))
+    ~contents_dir:(Fpath.append contents_dir (Fpath.v "comic/media"))

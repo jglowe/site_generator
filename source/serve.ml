@@ -1,7 +1,3 @@
-exception HTTP404 of string
-
-exception HTTP500 of string
-
 module Response = struct
   type t = {status : int; headers : (string * string) list; body : string}
 
@@ -58,8 +54,6 @@ module Request = struct
   let add_header ~request ~key ~value =
     {request with headers = (key, value) :: request.headers}
 
-  (*let get_header (request :t)
-*)
   let get_url_param ~request ~key = Uri.get_query_param request.uri key
 
   let get_param ~request ~key = List.assoc_opt key request.params
